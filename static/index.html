@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jeep Parts Competitor Tracker</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #ddd9cf;
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-muted: #8a8980;
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --success: #0f6e56;
+    --danger: #993c1d;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 2rem 1.5rem 4rem;
+    line-height: 1.5;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 1.5rem; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    background: #fff;
+    color: var(--text-primary);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  button {
+    height: 38px;
+    padding: 0 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-primary);
+  }
+  button:hover { background: var(--accent-bg); border-color: var(--accent); }
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+  button.primary:hover { opacity: 0.9; }
+
+  .search-bar { display: flex; gap: 8px; }
+  .search-bar input { flex: 1; }
+
+  .status { font-size: 13px; color: var(--text-secondary); margin: 10px 0 0; min-height: 18px; }
+  .status.error { color: var(--danger); }
+  .status.success { color: var(--success); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 1rem 0 1.5rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .stat-label { font-size: 12px; color: var(--text-secondary); margin: 0 0 4px; }
+  .stat-value { font-size: 22px; font-weight: 600; margin: 0; }
+
+  .item-row {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .item-row:first-child { border-top: none; }
+  .item-img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius); flex-shrink: 0; background: #eee; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-title { font-size: 14px; color: var(--text-primary); text-decoration: none; display: block; margin-bottom: 4px; }
+  .item-title:hover { text-decoration: underline; }
+  .item-meta { font-size: 12px; color: var(--text-muted); margin: 0; }
+  .item-price { text-align: right; flex-shrink: 0; min-width: 90px; }
+  .item-price .amt { font-size: 16px; font-weight: 600; margin: 0; }
+  .item-price .tag { font-size: 11px; color: var(--success); margin: 2px 0 0; }
+  .lowest .amt { color: var(--success); }
+
+  .saved-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .saved-table th, .saved-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .saved-table th { color: var(--text-secondary); font-weight: 500; font-size: 12px; }
+  .saved-table tr:last-child td { border-bottom: none; }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Jeep Parts Competitor Tracker</h1>
+  <p class="subtitle">Live eBay search for competitor pricing on used Jeep parts</p>
+
+  <div class="panel">
+    <label for="searchBox" style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Search for a part</label>
+    <div class="search-bar">
+      <input type="text" id="searchBox" placeholder="e.g. Jeep TJ door hinge" />
+      <button class="primary" id="searchBtn">Search</button>
+    </div>
+    <div class="status" id="statusArea"></div>
+  </div>
+
+  <div class="stats hidden" id="summaryCards">
+    <div class="stat-card">
+      <p class="stat-label">Listings found</p>
+      <p class="stat-value" id="statCount">--</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Lowest price</p>
+      <p class="stat-value" id="statLow">--</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Average price</p>
+      <p class="stat-value" id="statAvg">--</p>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="resultsPanel">
+    <div id="results"></div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px;">
+      <strong style="font-size: 14px;">Saved searches (this session)</strong>
+      <button id="clearSaved">Clear</button>
+    </div>
+    <div id="savedArea" style="font-size: 12px; color: var(--text-muted);">No saved searches yet.</div>
+  </div>
+</div>
+
+<script>
+const searchBox = document.getElementById('searchBox');
+const searchBtn = document.getElementById('searchBtn');
+const statusArea = document.getElementById('statusArea');
+const resultsDiv = document.getElementById('results');
+const resultsPanel = document.getElementById('resultsPanel');
+const summaryCards = document.getElementById('summaryCards');
+const savedArea = document.getElementById('savedArea');
+const clearSavedBtn = document.getElementById('clearSaved');
+
+let savedSearches = [];
+
+function money(n) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+}
+
+function setStatus(msg, type) {
+  statusArea.textContent = msg;
+  statusArea.className = 'status' + (type ? ' ' + type : '');
+}
+
+async function runSearch() {
+  const q = searchBox.value.trim();
+  if (!q) {
+    setStatus('Enter a part name to search.', 'error');
+    return;
+  }
+
+  setStatus('Searching eBay for "' + q + '"...', '');
+  resultsDiv.innerHTML = '';
+  resultsPanel.classList.add('hidden');
+  summaryCards.classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Something went wrong.');
+    }
+
+    const items = data.items || [];
+    if (items.length === 0) {
+      setStatus('No listings found for "' + q + '". Try a broader search term.', '');
+      return;
+    }
+
+    setStatus('Showing ' + items.length + ' live listings, sorted by price (lowest first).', 'success');
+
+    const prices = items.map(it => it.price);
+    const low = Math.min(...prices);
+    const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+    document.getElementById('statCount').textContent = items.length;
+    document.getElementById('statLow').textContent = money(low);
+    document.getElementById('statAvg').textContent = money(avg);
+    summaryCards.classList.remove('hidden');
+
+    resultsDiv.innerHTML = items.map(it => {
+      const shipLabel = it.shipping === null || it.shipping === undefined
+        ? 'See listing'
+        : (it.shipping === 0 ? 'Free' : money(it.shipping));
+      const isLowest = it.price === low;
+
+      return `
+        <div class="item-row ${isLowest ? 'lowest' : ''}">
+          ${it.image ? `<img class="item-img" src="${it.image}" alt="" />` : `<div class="item-img"></div>`}
+          <div class="item-info">
+            <a class="item-title" href="${it.url}" target="_blank" rel="noopener">${it.title}</a>
+            <p class="item-meta">${it.condition} &middot; seller: ${it.seller} &middot; shipping: ${shipLabel}</p>
+          </div>
+          <div class="item-price">
+            <p class="amt">${money(it.price)}</p>
+            ${isLowest ? `<p class="tag">Lowest</p>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    resultsPanel.classList.remove('hidden');
+
+    savedSearches.unshift({
+      term: q,
+      time: new Date().toLocaleString(),
+      count: items.length,
+      low: low,
+      avg: avg
+    });
+    renderSaved();
+
+  } catch (err) {
+    setStatus("Couldn't complete the search: " + err.message, 'error');
+  }
+}
+
+function renderSaved() {
+  if (savedSearches.length === 0) {
+    savedArea.innerHTML = 'No saved searches yet.';
+    return;
+  }
+  const rows = savedSearches.map(s => `
+    <tr>
+      <td>${s.term}</td>
+      <td>${s.time}</td>
+      <td>${s.count}</td>
+      <td>${money(s.low)}</td>
+      <td>${money(s.avg)}</td>
+    </tr>
+  `).join('');
+  savedArea.innerHTML = `
+    <table class="saved-table">
+      <thead>
+        <tr><th>Search term</th><th>Time</th><th>Results</th><th>Lowest</th><th>Average</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+clearSavedBtn.addEventListener('click', () => {
+  savedSearches = [];
+  renderSaved();
+});
+
+searchBtn.addEventListener('click', runSearch);
+searchBox.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+</script>
+</body>
+</html>
