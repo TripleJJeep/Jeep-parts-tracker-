@@ -129,6 +129,10 @@
       <input type="text" id="searchBox" placeholder="e.g. Jeep TJ door hinge" />
       <button class="primary" id="searchBtn">Search</button>
     </div>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); margin-top: 10px;">
+      <input type="checkbox" id="usedOnly" checked style="width: auto; height: auto;" />
+      Used parts only (excludes new/refurbished)
+    </label>
     <div class="status" id="statusArea"></div>
   </div>
 
@@ -194,7 +198,8 @@ async function runSearch() {
   summaryCards.classList.add('hidden');
 
   try {
-    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const usedOnly = document.getElementById('usedOnly').checked;
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q) + '&used_only=' + usedOnly);
     const data = await res.json();
 
     if (!res.ok) {
